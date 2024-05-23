@@ -7,11 +7,11 @@ export const packetparser = async (data) => {
         for (const d of data) {
             let deviceNodeSrc = {
                 id: d.src_ip,
-                type: d.src_ip === '192.168.216.7' ? "Router" : "Device"
+                type: d.src_ip === '192.168.6.7' ? "Router" : "Device"
             };
             let deviceNodeDst = {
                 id: d.dst_ip,
-                type: d.dst_ip === '192.168.216.7' ? "Router" : "Device"
+                type: d.dst_ip === '192.168.6.7' ? "Router" : "Device"
             };
 
             // src_ip와 dst_ip에 대한 Device 노드 중복 제거 후 추가
@@ -82,8 +82,9 @@ export const packetparser = async (data) => {
                 links.push(netLink);
                 linkIds.add(netLinkId);
             }
-            console.log(nodes, links)
         }
+        
+        console.log(nodes, links)
         return {
             nodes: nodes,
             links: links,

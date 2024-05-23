@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import * as d3 from 'd3';
 import { drag, handleNodeClick} from './Event';
 
-const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data }) => {
+const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data, deviceData}) => {
     const width = 800, height = 800;
     const color = d3.scaleOrdinal()
         .domain(["Router", "Device", "Port"])
@@ -20,7 +20,7 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data }) => {
         .force("charge", d3.forceManyBody())
         .force("collide", d3.forceCollide().radius(2))
         .force("link", d3.forceLink().id(d => d.id).distance(d => {
-            //간선의 길이를 설정
+            //간선의 길이를 설정.
             if (d.type === "Port") {
               return 7;
             } else {
@@ -28,7 +28,7 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data }) => {
             }
           })
           .strength(d => {
-            //간선의 장력을 설정
+            //간선의 장력을 설정.
             if (d.type === "Port") {
                 return 0.9;
             } else {
@@ -102,7 +102,7 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data }) => {
                     .attr("cy", d => d.y);
             });
         simulation.force("link").links(data.links);
-    }, [data]);
+    }, [data, deviceData]);
 
 };
 export default GraphData;
