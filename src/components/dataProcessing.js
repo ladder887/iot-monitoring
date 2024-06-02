@@ -1,10 +1,17 @@
-export const packetparser = async (data) => {
+let nodes = [];
+let links = [];
+let nodeIds = new Set();
+let linkIds = new Set();
+
+export const dataParser = async (data) => {
     try {
-        let nodes = []; // 노드 목록 초기화
-        let links = []; // 링크 목록 초기화
-        let nodeIds = new Set(); // 노드 ID 저장을 위한 Set
-        let linkIds = new Set(); // 링크 ID (source-target 쌍) 저장을 위한 Set
-        for (const d of data) {
+        nodes = [];
+        links = [];
+        nodeIds = new Set();
+        linkIds = new Set();
+
+        await scannerparser(data.deviceData)
+        for (const d of data.packetData) {
             let deviceNodeSrc = {
                 id: d.src_ip,
                 type: d.src_ip === '192.168.6.7' ? "Router" : "Device"
@@ -14,7 +21,7 @@ export const packetparser = async (data) => {
                 type: d.dst_ip === '192.168.6.7' ? "Router" : "Device"
             };
 
-            // src_ip와 dst_ip에 대한 Device 노드 중복 제거 후 추가
+
             if (!nodeIds.has(deviceNodeSrc.id)) {
                 nodes.push(deviceNodeSrc);
                 nodeIds.add(deviceNodeSrc.id);
@@ -33,7 +40,6 @@ export const packetparser = async (data) => {
                 type: "Port"
             };
 
-            // src_port와 dst_port에 대한 Port 노드 중복 제거 후 추가
             if (!nodeIds.has(portNodeSrc.id)) {
                 nodes.push(portNodeSrc);
                 nodeIds.add(portNodeSrc.id);
@@ -58,7 +64,6 @@ export const packetparser = async (data) => {
                 length: 5
             };
 
-            // 소스와 타겟을 기준으로 한 링크 중복 제거 후 추가
             let portLinkSrcId = `${portLinkSrc.source}-${portLinkSrc.target}`;
             let portLinkDstId = `${portLinkDst.source}-${portLinkDst.target}`;
             if (!linkIds.has(portLinkSrcId)) {
@@ -96,17 +101,14 @@ export const packetparser = async (data) => {
 };
 
 
-export const scannerparser = async (data, nodes, links, nodeIds, linkIds) => {
+export const scannerparser = async (data) => {
     try {
-        nodes = []
-        nodeIds = new Set();
-
         for (const d of data) {
 
-            let deviceNode = {
+            const deviceNode = {
                 id: d.ip,
                 mac: d.mac,
-                type: d.ip === '192.168.216.7' ? "Router" : "Device",
+                type: d.ip === '192.168.3.7' ? "Router" : "Device",
                 hostname: d.hostname,
             };
 
@@ -115,12 +117,6 @@ export const scannerparser = async (data, nodes, links, nodeIds, linkIds) => {
                 nodeIds.add(deviceNode.id);
             }
 
-        }
-        return {
-            nodes: nodes,
-            links: links,
-            nodeIds: nodeIds,
-            linkIds: linkIds
         };
     } catch (error) {
         console.error(error);
@@ -133,7 +129,10 @@ export const nodeInformation = async (d) => {
     try {
         let data;
         if (d.type === "Device") {
-            data = {"Device": d.id }
+            data = {"Device": d.id,
+                    "MAC":d.mac,
+                    "Hostname":d.hostname
+                    }
         } 
         else if (d.type === "Port") {
             const parts = d.id.split(":")

@@ -20,7 +20,7 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data, deviceData}) =>
         .force("charge", d3.forceManyBody())
         .force("collide", d3.forceCollide().radius(2))
         .force("link", d3.forceLink().id(d => d.id).distance(d => {
-            //간선의 길이를 설정.
+            //간선의 길이
             if (d.type === "Port") {
               return 7;
             } else {
@@ -28,7 +28,7 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data, deviceData}) =>
             }
           })
           .strength(d => {
-            //간선의 장력을 설정.
+            //간선의 장력
             if (d.type === "Port") {
                 return 0.9;
             } else {
@@ -51,15 +51,13 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data, deviceData}) =>
             return {...oldNode, ...d};
         });
     
-        // 새로운 Port 노드에 대해 Device 노드의 위치를 초기 위치로 설정
         data.nodes.forEach(node => {
-            if(node.type === "Port" && !old.has(node.id)) { // 새로운 Port 노드인 경우
+            if(node.type === "Port" && !old.has(node.id)) {
                 let connectedDeviceNode = data.links.find(link => link.target === node.id || link.source === node.id);
                 if(connectedDeviceNode) {
                     let deviceNodeId = connectedDeviceNode.target === node.id ? connectedDeviceNode.source : connectedDeviceNode.target;
                     let deviceNode = data.nodes.find(n => n.id === deviceNodeId);
                     if(deviceNode) {
-                        // Device 노드의 위치를 Port 노드의 초기 위치로 설정
                         node.x = deviceNode.x;
                         node.y = deviceNode.y;
                     }

@@ -1,17 +1,17 @@
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const http = require('http');
-const { Worker } = require('worker_threads'); // Worker 모듈 추가
+const { Worker } = require('worker_threads');
 
 const app = express();
 const port = 9999;
 
-let dataList = [];
+let dataList = { packetData: [], deviceData: [] };
+const scanInterval = 30000;
+const dataBroadcastInterval = 2000;
 
-// Express 서버 설정
 app.use(express.json());
 
-// 네트워크 스캔을 위한 함수
 async function scanNetwork(range) {
     return new Promise((resolve, reject) => {
         const worker = new Worker('./scanner.js');
@@ -19,65 +19,84 @@ async function scanNetwork(range) {
             if (message.type === 'scanResults') {
                 resolve(message.scanResults);
             } else if (message.error) {
-                reject(message.error);
+                reject(new Error(message.error));
+            }
+        });
+        worker.on('error', (error) => {
+            reject(new Error(`Worker error: ${error.message}`));
+        });
+        worker.on('exit', (code) => {
+            if (code !== 0) {
+                reject(new Error(`Worker stopped with exit code ${code}`));
             }
         });
         worker.postMessage(range);
     });
 }
 
-// 클라이언트로부터 스캔 요청을 받는 엔드포인트 추가
-app.post('/scan', async (req, res) => {
-    const { range } = req.body;
-    try {
-        const scanResults = await scanNetwork(range);
-        res.json({ scanResults });
-    } catch (error) {
-        console.error('Error during network scan:', error);
-        res.status(500).json({ error: 'An error occurred during network scan' });
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', function connection(ws, req) {
+    if (req.url === '/data') {
+        handleDataWsConnection(ws);
+    } else if (req.url === '/ws') {
+        handleCommandWsConnection(ws);
     }
 });
 
-// HTTP 서버 생성
-const server = http.createServer(app);
+function handleDataWsConnection(ws) {
+    console.log('A client connected via WebSocket for /data');
+    ws.on('message', function incoming(message) {
+        try {
+            const data = JSON.parse(message);
+            if (Array.isArray(data) && data.length > 0) {
+                dataList.packetData.push(...data);
+                console.log('Received packet data:', data);
+            }
+        } catch (error) {
+            console.error('Error parsing received data:', error);
+        }
+    });
+}
 
-// WebSocket 서버 생성 및 실행
-const wss = new WebSocketServer({ server, path: "/ws" });
-
-wss.on('connection', function connection(ws) {
-    console.log('A client connected via WebSocket');
+function handleCommandWsConnection(ws) {
+    console.log('A client connected via WebSocket for /ws');
     ws.on('message', function incoming(message) {
         console.log('received: %s', message);
     });
-});
+}
 
-// 5초마다 네트워크 스캔 실행
-setInterval(async () => {
+async function performNetworkScanAndBroadcast() {
     try {
-        const range = '192.168.22.*'; // 스캔할 범위
+        const range = '192.168.3.*';
         const scanResults = await scanNetwork(range);
-        dataList.push(scanResults); // 스캔 결과를 데이터 리스트에 추가
-        console.log(scanResults)
+        if (scanResults.length > 0) {
+            dataList.deviceData = scanResults;
+            console.log('Scan results:', scanResults);
+            console.log('Updated dataList:', dataList);
+        }
     } catch (error) {
         console.error('Error during network scan:', error);
     }
-}, 20000); // 10초마다 실행
+}
 
-//2초마다 WebSocket 클라이언트로 데이터 전송
+setInterval(performNetworkScanAndBroadcast, scanInterval);
+
 setInterval(() => {
-    if (dataList.length > 0) {
+    if (dataList.packetData.length > 0 || dataList.deviceData.length > 0) {
         const dataToSend = JSON.stringify(dataList);
         wss.clients.forEach(function each(client) {
             if (client.readyState === 1) {
                 client.send(dataToSend);
             }
         });
-        dataList = [];  //데이터 리스트를 비움
+        dataList.packetData = [];
     }
-}, 2000);   //2초마다 실행
+}, dataBroadcastInterval);
 
-// Express 서버와 WebSocket 서버를 같은 HTTP 서버에서 실행
 server.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
     console.log(`WebSocket server listening at ws://localhost:${port}/ws`);
+    console.log(`WebSocket server listening at ws://localhost:${port}/data`);
 });

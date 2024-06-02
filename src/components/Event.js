@@ -69,7 +69,7 @@ export function handleNodeClick(event, d, infoSvg) {
                         .text(value);
                 }
                 
-            }else if(key.includes("Device")) {
+            }else {
                 div.append("xhtml:p")
                     .style("margin", "0")
                     .style("padding", "5px")
@@ -82,40 +82,13 @@ export function handleNodeClick(event, d, infoSvg) {
                     .style("padding", "7px")
                     .style("border-bottom", "1px solid #ccc")
                     .text(value);
-            }else if(key.includes("Port")) {
-                div.append("xhtml:p")
-                    .style("margin", "0")
-                    .style("padding", "5px")
-                    .style("font-size", "15px")
-                    .style("font-weight", "bold")
-                    .text(key);
-                div.append("xhtml:p")
-                    .style("margin", "0")
-                    .style("margin-bottom", "10px")
-                    .style("padding", "7px")
-                    .style("border-bottom", "1px solid #ccc")
-                    .text(value);
-            }else if(key.includes("Router")) {
-                div.append("xhtml:p")
-                    .style("margin", "0")
-                    .style("padding", "5px")
-                    .style("font-size", "15px")
-                    .style("font-weight", "bold")
-                    .text(key);
-                div.append("xhtml:p")
-                    .style("margin", "0")
-                    .style("margin-bottom", "10px")
-                    .style("padding", "7px")
-                    .style("border-bottom", "1px solid #ccc")
-                    .text(value);
-        }
+            }
         });
     }).catch((error) => {
         console.error("에러:", error);
     });
 }
 
-// drag 함수
 export function drag(simulation) {
     const dragstarted = (event, d) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
