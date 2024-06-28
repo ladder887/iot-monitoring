@@ -2,24 +2,17 @@ import * as d3 from 'd3';
 import { nodeInformation } from './dataProcessing';
 
 export function handleNodeClick(event, d, infoSvg) {
-    const infoWidth = 600, infoHeight = 800;
+    const infoWidth = 500, infoHeight = 800;
     d3.selectAll("circle").style("stroke", "#fff");
     d3.select(event.currentTarget).style("stroke", "blue");
     
     nodeInformation(d).then((info) => {
-        infoSvg.selectAll("*").remove();
-    
-        infoSvg.append("text")
-            .attr("x", 90)
-            .attr("y", 30)
-            .text("Node information")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "30px")
-            .attr("fill", "red");
+        infoSvg.selectAll("foreignObject").remove();
     
         const textbox = infoSvg.append("foreignObject")
-            .attr("x", 10)
-            .attr("y", 60)
+            .attr("id", "infobox")
+            .attr("x", 0)
+            .attr("y", 80)
             .attr("width", infoWidth - 20)
             .attr("height", infoHeight - 70);
 
@@ -29,46 +22,20 @@ export function handleNodeClick(event, d, infoSvg) {
             .style("overflow", "auto");
 
         Object.entries(info).forEach(([key, value]) => {
-            if (key.includes("URL")) {
-                if (Array.isArray(value)) {
-                    div.append("xhtml:p")
-                        .style("margin", "0px")
-                        .style("padding", "5px")
-                        .style("font-size", "15px")
-                        .style("font-weight", "bold")
-                        .text(key)
-                    value.forEach((value) => {
-                        div.append("xhtml:a")
-                            .attr("href", value)
-                            .attr("target", "_blank")
-                            .style("display", "block")
-                            .style("margin", "0px")
-                            .style("padding", "7px")
-                            .text(value);
-                    });
-                    div.append("xhtml:p")
-                        .style("margin", "0px")
-                        .style("margin-bottom", "10px")
-                        .style("padding", "5px")
-                        .style("border-bottom", "1px solid #ccc");
-                } else {
-                    div.append("xhtml:p")
-                        .style("margin", "0px")
-                        .style("padding", "5px")
-                        .style("font-size", "15px")
-                        .style("font-weight", "bold")
-                        .text(key)
-                    div.append("xhtml:a")
-                        .attr("href", value)
-                        .attr("target", "_blank")
-                        .style("display", "block")
-                        .style("margin", "0px")
-                        .style("margin-bottom", "10px")
-                        .style("padding", "7px")
-                        .style("border-bottom", "1px solid #ccc")
-                        .text(value);
-                }
-                
+            if (key.includes("GRFANA")) {
+                div.append("xhtml:a")
+                    .attr("href", value)
+                    .attr("target", "_blank")
+                    .style("display", "block")
+                    .style("margin", "0px")
+                    .style("margin-bottom", "10px")
+                    .style("padding", "7px")
+                    .style("border-bottom", "1px solid #ccc")
+                    .append("xhtml:img")
+                    .attr("src", "grfana.png")
+                    .attr("alt", "Link Image")
+                    .style("width", "8%")
+                    .style("height", "auto");
             }else {
                 div.append("xhtml:p")
                     .style("margin", "0")

@@ -1,0 +1,16 @@
+/* 스크롤바 전체 스타일 */
+::-webkit-scrollbar {
+    width: 10px; /* 스크롤바의 너비 */
+    height: 10px;
+    border-left: 150%;
+}
+
+/* 스크롤바 핸들(Thumb) */
+::-webkit-scrollbar-thumb {
+    background: gray; /* 핸들의 배경 색상 */
+    border-radius: 10px; /* 핸들의 둥근 모서리 */
+}
+/* 스크롤바 버튼(상하좌우 화살표) */
+::-webkit-scrollbar-button {
+    display: none; /* 스크롤바 버튼 숨기기 */
+}

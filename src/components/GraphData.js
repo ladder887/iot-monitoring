@@ -1,91 +1,135 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import * as d3 from 'd3';
-import { drag, handleNodeClick} from './Event';
+import { drag, handleNodeClick } from './Event';
 
-const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data, deviceData}) => {
-    const width = 800, height = 800;
-    const color = d3.scaleOrdinal()
-        .domain(["Router", "Device", "Port"])
-        .range(["red", "green", "orange"]);
+const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data }) => {
+    const width = 1000, height = 600;
 
-    const size = d3.scaleOrdinal()  
-        .domain(["Router", "Device", "Port"])
-        .range([20, 15, 5]);
+    const nodeImageMap = d3.scaleOrdinal()
+        .domain(["router", "server", "benign_device", "non_detection", "attack_device", "reflect_device", "victim_device", "unauthorized_device", "port"])
+        .range(["router.gif", "server.gif", "benign_device.gif", "non_detection.gif", "attack_device.gif", "reflect_device.gif", "victim_device.gif", "unauthorized_device.gif", "port.gif"]);
+
+    const nodeSize = d3.scaleOrdinal()
+        .domain(["router", "server", "benign_device", "attack_device", "reflect_device", "victim_device", "un_device", "port"])
+        .range([30, 30, 30, 30, 30, 30, 30, 7]);
 
     const linkColor = d3.scaleOrdinal()
-        .domain(["TCP", "UDP", "ICMP", "Other", "Port"])
-        .range(["green", "red", "blue", "black", "gray"]);
+        .domain(["TCP", "UDP", "ICMP", "other", "port"])
+        .range(["green", "blue", "red", "black", "white"]);
+
 
     const simulation = d3.forceSimulation()
-        .force("charge", d3.forceManyBody())
-        .force("collide", d3.forceCollide().radius(2))
+        .force("charge", d3.forceManyBody().strength(0.1))
+        .force("collide", d3.forceCollide().radius(10))
         .force("link", d3.forceLink().id(d => d.id).distance(d => {
-            //간선의 길이
-            if (d.type === "Port") {
-              return 7;
+            if (d.type === "port") {
+                return 30;
             } else {
-              return 200; 
+                return 200;
             }
-          })
-          .strength(d => {
-            //간선의 장력
-            if (d.type === "Port") {
-                return 0.9;
+        })
+        .strength(d => {
+            if (d.type === "port") {
+                return 1;
             } else {
-                return 0.1;
+                return 0.01;
             }
         }))
-        .force("center", d3.forceCenter(width / 32, height / 32));
+        .force("center", d3.forceCenter(width / 2, height / 2));
         //.force("x", d3.forceX())
-        //.force("y", d3.forceY())
-
+        //.force("y", d3.forceY());
 
     useEffect(() => {
-
         const svg = d3.select(svgRef.current);
         const infoSvg = d3.select(infoSvgRef.current);
 
-        let old = new Map(nodeRef.current?.selectAll("circle").data()?.map(d => [d.id, d]) || []);
-        data.nodes = data.nodes.map(d => {
-            let oldNode = old.get(d.id);
-            return {...oldNode, ...d};
+        const circleRadius = Math.min(width, height);
+        const center = { x: width / 2, y: height / 2 };
+
+        let oldNodesMap = new Map(nodeRef.current?.selectAll("circle").data()?.map(d => [d.id, d]) || []);
+        
+        data.nodes = data.nodes.map((d, index, { length }) => {
+            let oldNode = oldNodesMap.get(d.id);
+            if (oldNode) {
+                return { ...d, x: oldNode.x, y: oldNode.y };
+            } else {
+                const angle = (index / length) * 2 * Math.PI; 
+                return { ...d, x: center.x + circleRadius * Math.cos(angle) / 2, y: center.y + circleRadius * Math.sin(angle) / 2 };
+            }
         });
-    
+
         data.nodes.forEach(node => {
-            if(node.type === "Port" && !old.has(node.id)) {
+            if (node.type === "port" && !oldNodesMap.has(node.id)) {
                 let connectedDeviceNode = data.links.find(link => link.target === node.id || link.source === node.id);
-                if(connectedDeviceNode) {
+                if (connectedDeviceNode) {
                     let deviceNodeId = connectedDeviceNode.target === node.id ? connectedDeviceNode.source : connectedDeviceNode.target;
                     let deviceNode = data.nodes.find(n => n.id === deviceNodeId);
-                    if(deviceNode) {
-                        node.x = deviceNode.x;
-                        node.y = deviceNode.y;
+                    if (deviceNode) {
+                        const portIndex = data.nodes.filter(n => n.type === 'port').indexOf(node);
+                        const angle = (portIndex / data.nodes.length) * 2 * Math.PI;
+                        node.x = deviceNode.x + 30 * Math.cos(angle);
+                        node.y = deviceNode.y + 30 * Math.sin(angle);
                     }
                 }
             }
         });
-        data.links = data.links.map(d => ({...d}));
+        //data.links = data.links.map(d => ({ ...d }));
         
+        const defs = svg.select('defs');
+        defs.selectAll('*').remove();
+
+        // 노드 패턴 정의
+        data.nodes.forEach(d => {
+            defs.append('pattern')
+                .attr('id', `pattern-${d.id}`)
+                .attr('patternUnits', 'objectBoundingBox')
+                .attr('width', 1)
+                .attr('height', 1)
+                .append('image')
+                .attr('xlink:href', nodeImageMap(d.type))
+                .attr('width', nodeSize(d.type) * 2)
+                .attr('height', nodeSize(d.type) * 2)
+                .attr('x', 0)
+                .attr('y', 0);
+        });
+
+        defs.append('marker')
+            .attr('id', 'rectangle-marker')
+            .attr('viewBox', '0 0 10 10')
+            .attr('refX', 5)
+            .attr('refY', 5)
+            .attr('markerWidth', 10)
+            .attr('markerHeight', 10)
+            .attr('orient', 'auto-start-reverse')
+            .append('rect')
+            .attr('x', 1)
+            .attr('y', 1)
+            .attr('width', 8)
+            .attr('height', 8)
+            .attr('fill', '#999');
 
         const node = nodeRef.current
             .selectAll("circle")
             .data(data.nodes, d => d.id)
             .join(
                 enter => enter.append("circle")
-                    .attr("r", d => size(d.type))
-                    .attr("fill", d => color(d.type))
+                    .attr("r", d => nodeSize(d.type))
+                    .attr("fill", d => `url(#pattern-${d.id})`)
                     .call(drag(simulation))
-                    .on("click", (event, d) => handleNodeClick(event, d, infoSvg))
+                    .on("click", (event, d) => handleNodeClick(event, d, infoSvg)),
+                update => update
+                    .attr("r", d => nodeSize(d.type))
+                    .attr("fill", d => `url(#pattern-${d.id})`)
             );
-    
-        node.append("title").text(d => d.id);
-    
+
         const link = linkRef.current
             .selectAll("line")
-            .data(data.links, d => [d.source, d.target])
+            .data(data.links.filter(d => d.type !== "port"), d => [d.source, d.target])
             .join("line")
             .attr("stroke", d => linkColor(d.type))
-            .attr("stroke-width", d => Math.sqrt(d.value));
+            .attr("stroke-width", d => Math.sqrt(d.value))
+            .attr("marker-end", "url(#rectangle-marker)");
+
 
         simulation.nodes(data.nodes)
             .on("tick", () => {
@@ -99,8 +143,13 @@ const GraphData = ({ svgRef, infoSvgRef, linkRef, nodeRef, data, deviceData}) =>
                     .attr("cx", d => d.x)
                     .attr("cy", d => d.y);
             });
-        simulation.force("link").links(data.links);
-    }, [data, deviceData]);
 
+        simulation.force("link").links(data.links);
+        simulation.alpha(1).restart();
+
+    }, [svgRef, infoSvgRef, linkRef, nodeRef, data, linkColor, nodeImageMap, nodeSize, simulation]);
+
+    return null;
 };
+
 export default GraphData;

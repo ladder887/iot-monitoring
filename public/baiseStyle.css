@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
+    margin-top: 0%;
+    margin-bottom: 10%;
+    margin-left: 10%;
+    margin-right: 10%;
+    padding: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* 헤더 스타일 */
+  header {
+    font-family: "Jua", sans-serif;
+    font-style: normal;
+    font-weight: 200;
+    font-size: 50px;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 0 0 0 0;
+    align-items: center;
+    padding-right: 40px;
+    padding-left: 40px;
+    background-color: 0;
+    
+  }
+
+  header a {
+    text-decoration: none; 
+  }
+
+  
+
+  header h3 {
+    color: rgb(87, 87, 87);
+    padding-right: 950px;
+  }
+
+  .no-underline {
+    text-decoration: none; 
+  }
+
+  .logo img {
+    height: 80px;
+  }

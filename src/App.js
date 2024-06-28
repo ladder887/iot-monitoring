@@ -2,7 +2,7 @@ import './App.css';
 import React, { useState, useEffect, useRef } from 'react';
 import GraphComponent from './components/GraphComponent';
 import GraphData from './components/GraphData';
-import { scannerparser, dataParser } from './components/dataProcessing';
+import { dataParser } from './components/dataProcessing';
 
 function App() {
     const svgRef = useRef(null);
@@ -18,7 +18,7 @@ function App() {
         ws.current.onmessage = async (event) => {
             try {
                 const newData = JSON.parse(event.data);
-                console.log(newData);
+                //console.log(newData);
                 const processedData = await dataParser(newData)
                 setData(processedData)
             } catch (error) {
@@ -42,7 +42,7 @@ function App() {
     }, []);
 
     return (
-        <div id="chart">
+        <div>
             <GraphComponent svgRef={svgRef} infoSvgRef={infoSvgRef} gRef={gRef} linkRef={linkRef} nodeRef={nodeRef} />
             {data && <GraphData svgRef={svgRef} infoSvgRef={infoSvgRef} linkRef={linkRef} nodeRef={nodeRef} data={data} />}
         </div>
