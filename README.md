@@ -15,9 +15,39 @@ IoT 기기의 네트워크 및 하드웨어 모니터링 시스템
 - 언어: JS, Python
 - 라이브러리: NumPy, pandas, TensorFlow, scikit-learn, Scapy, D3.js
 - 프레임워크: Node.js, React
-- 오픈소스: React, Prometheus, InfluxDB, Nmap
+- 오픈소스: Grafana, Prometheus, Node_Exporter, InfluxDB, Nmap
 
 ## 시스템 구성도
 
-### 전체 구성도
+### - 전체 구성도
 
+![system_model](/figures/system_model.png)
+
+### - 패킷 데이터 수집 및 시각화
+
+<img src="./figures/system_model_packet.png" width="600"/>
+
+### - 시스템 메트릭 시각화
+
+<img src="./figures/system_model_metric.png" width="600"/>
+
+### - DR-DoS 등 공격 탐지 및 시각화
+
+<img src="./figures/system_model_detection.png" width="600"/>
+
+### - 내부 네트워크 연결 기기 탐지 및 시각화
+
+<img src="./figures/system_model_network.png" width="400"/>
+
+## 동작 영상
+추가 예정
+## 팀 역할
+
+### 이현우
+- D3를 활용한 IoT 기기 네트워크 모니터링 시각화 기능 개발
+- 내부 네트워크에 대한 패킷 데이터 및 연결 디바이스 정보 수집 기능 개발
+- 웹 기반의 사용자 인터페이스 개발
+
+### 박은영
+- 스마트 홈 IoT 기기 시스템 메트릭 모니터링 및 보안 취약점 탐지 AI 개발
+- 웹 기반의 사용자 인터페이스 개발
