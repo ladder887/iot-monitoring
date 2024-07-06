@@ -1,27 +1,25 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import * as d3 from 'd3';
-import { drag, handleNodeClick} from './Event';
 import ZoomComponent from './ZoomComponent';
 
 const GraphComponent = ({ svgRef, infoSvgRef, gRef, linkRef, nodeRef }) => {
-    const width = 800, height = 800;
-    const infoWidth = 400, infoHeight = 800;
-
+    const width = 1000, height = 600;
+    const infoWidth = 400, infoHeight = 600;
 
     useEffect(() => {
         const svg = d3.select(svgRef.current)
             .attr("id", "svg")
             .attr("width", width)
             .attr("height", height)
-            .attr("viewBox", [-width / 2, -height / 2, width, height])
-            .attr("style", "max-width: 100%; height: auto; border:2px solid black;");
+            .attr("viewBox", [0, 0, width, height])
+            .attr("style", "max-width: 100%; height: auto;");
 
         const infoSvg = d3.select(infoSvgRef.current)
             .attr("id", "infoSvg")
             .attr("width", infoWidth)
             .attr("height", infoHeight)
             .attr("viewBox", [0, 0, infoWidth, infoHeight])
-            .attr("style", "max-width: 100%; height: auto; border:2px solid black;")
+            .attr("style", "max-width: 100%; height: auto;")
             .attr("x", width)
             .attr("y", 0);
 
@@ -34,7 +32,14 @@ const GraphComponent = ({ svgRef, infoSvgRef, gRef, linkRef, nodeRef }) => {
         nodeRef.current = gRef.current.append("g")
             .attr("stroke", "#fff")
             .attr("stroke-width", 1.5);
-            
+        
+        infoSvg.append("text")
+            .attr("x", 125)
+            .attr("y", 30)
+            .text("information")
+            .attr("font-size", "30px")
+            .attr("fill", "green");
+
         svg.append("text")
             .attr("x", (-width / 2) + 10)
             .attr("y", (-height / 2) + 20)
@@ -42,13 +47,20 @@ const GraphComponent = ({ svgRef, infoSvgRef, gRef, linkRef, nodeRef }) => {
             .attr("font-size", "20px")
             .attr("fill", "black");
 
+            
+        svg.append('defs');
+
     }, [])
 
     return (
-        <div style={{ overflowX: 'auto' }}>
+        <div class="flex-container">
+        <div class = "showcase">
             <svg ref={svgRef}></svg>
-            <svg ref={infoSvgRef}></svg>
             <ZoomComponent gRef={gRef} svgRef = {svgRef} />
+        </div>
+        <div class = "info">
+            <svg ref={infoSvgRef}></svg>
+        </div>
         </div>
     );
 };

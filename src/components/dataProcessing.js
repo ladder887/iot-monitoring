@@ -1,20 +1,32 @@
-export const packetparser = async (data) => {
+let nodes = [];
+let links = [];
+let nodeIds = new Set();
+let linkIds = new Set();
+const ip = '192.168.9.'
+const ipList = [ip + '3', ip + '105', ip + '106', ip + '22'];
+const router = ip + '169';
+const server = ip + '91';
+let lastState = {};
+
+export const dataParser = async (data) => {
     try {
-        let nodes = []; // 노드 목록 초기화
-        let links = []; // 링크 목록 초기화
-        let nodeIds = new Set(); // 노드 ID 저장을 위한 Set
-        let linkIds = new Set(); // 링크 ID (source-target 쌍) 저장을 위한 Set
-        for (const d of data) {
+        nodes = [];
+        links = [];
+        nodeIds = new Set();
+        linkIds = new Set();
+
+        await scannerParser(data.deviceData)
+        for (const d of data.packetData) {
             let deviceNodeSrc = {
                 id: d.src_ip,
-                type: d.src_ip === '192.168.216.7' ? "Router" : "Device"
+                type: router.includes(d.src_ip) ? "router" : (server.includes(d.src_ip) ? "server" : (ipList.includes(d.src_ip) ? "non_detection" : "unauthorized_device"))
             };
             let deviceNodeDst = {
                 id: d.dst_ip,
-                type: d.dst_ip === '192.168.216.7' ? "Router" : "Device"
+                type: router.includes(d.dst_ip) ? "router" : (server.includes(d.dst_ip) ? "server" : (ipList.includes(d.dst_ip) ? "non_detection" : "unauthorized_device"))
             };
 
-            // src_ip와 dst_ip에 대한 Device 노드 중복 제거 후 추가
+
             if (!nodeIds.has(deviceNodeSrc.id)) {
                 nodes.push(deviceNodeSrc);
                 nodeIds.add(deviceNodeSrc.id);
@@ -26,14 +38,13 @@ export const packetparser = async (data) => {
 
             let portNodeSrc = {
                 id: `${d.src_ip}:${d.src_port}`,
-                type: "Port"
+                type: "port"
             };
             let portNodeDst = {
                 id: `${d.dst_ip}:${d.dst_port}`,
-                type: "Port"
+                type: "port"
             };
 
-            // src_port와 dst_port에 대한 Port 노드 중복 제거 후 추가
             if (!nodeIds.has(portNodeSrc.id)) {
                 nodes.push(portNodeSrc);
                 nodeIds.add(portNodeSrc.id);
@@ -46,19 +57,16 @@ export const packetparser = async (data) => {
             let portLinkSrc = {
                 source: d.src_ip,
                 target: portNodeSrc.id,
-                type: "Port",
-                value: 3,
-                length: 5
+                type: "port",
+                value: 3
             };
             let portLinkDst = {
                 source: d.dst_ip,
                 target: portNodeDst.id,
-                type: "Port",
-                value: 3,
-                length: 5
+                type: "port",
+                value: 3
             };
 
-            // 소스와 타겟을 기준으로 한 링크 중복 제거 후 추가
             let portLinkSrcId = `${portLinkSrc.source}-${portLinkSrc.target}`;
             let portLinkDstId = `${portLinkDst.source}-${portLinkDst.target}`;
             if (!linkIds.has(portLinkSrcId)) {
@@ -74,16 +82,18 @@ export const packetparser = async (data) => {
                 source: portNodeSrc.id,
                 target: portNodeDst.id,
                 type: d.protocol,
-                value: 5,
-                length: 20
+                value: 1
             };
             let netLinkId = `${netLink.source}-${netLink.target}`;
             if (!linkIds.has(netLinkId)) {
                 links.push(netLink);
                 linkIds.add(netLinkId);
             }
-            console.log(nodes, links)
         }
+
+        await updateNodeTypesWithStateData(data.stateData);
+        
+        //console.log(nodes, links)
         return {
             nodes: nodes,
             links: links,
@@ -95,17 +105,14 @@ export const packetparser = async (data) => {
 };
 
 
-export const scannerparser = async (data, nodes, links, nodeIds, linkIds) => {
+export const scannerParser = async (data) => {
     try {
-        nodes = []
-        nodeIds = new Set();
-
         for (const d of data) {
 
-            let deviceNode = {
+            const deviceNode = {
                 id: d.ip,
                 mac: d.mac,
-                type: d.ip === '192.168.216.7' ? "Router" : "Device",
+                type: router.includes(d.ip) ? "router" : (server.includes(d.ip) ? "server" : (ipList.includes(d.ip) ? "non_detection" : "unauthorized_device")),
                 hostname: d.hostname,
             };
 
@@ -114,12 +121,6 @@ export const scannerparser = async (data, nodes, links, nodeIds, linkIds) => {
                 nodeIds.add(deviceNode.id);
             }
 
-        }
-        return {
-            nodes: nodes,
-            links: links,
-            nodeIds: nodeIds,
-            linkIds: linkIds
         };
     } catch (error) {
         console.error(error);
@@ -127,21 +128,70 @@ export const scannerparser = async (data, nodes, links, nodeIds, linkIds) => {
     }
 };
 
+const updateNodeTypesWithStateData = (stateData) => {
+    for (const states of stateData) {
+        const { IP, state } = states;
+        lastState[IP] = state;  // 업데이트된 상태를 저장
+    }
+    for (const [IP, state] of Object.entries(lastState)) {  // lastState의 각 항목을 순회
+        let node = nodes.find(n => n.id === IP);
+        if (node) {
+            switch (state) {
+                case 0:
+                    node.type = 'attack_device';
+                    break;
+                case 1:
+                    node.type = 'benign_device';
+                    break;
+                case 2:
+                    node.type = 'reflect_device';
+                    break;
+                case 3:
+                    node.type = 'victim_device';
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+};
 
 export const nodeInformation = async (d) => {
     try {
         let data;
-        if (d.type === "Device") {
-            data = {"Device": d.id }
+        if (d.type === "benign_device" || d.type === "attack_device" || d.type === "reflect_device" || d.type === "victim_device" || d.type === "non_detection") {
+            const parts = d.id.split(".");
+            data = {"STATUS": d.type,
+                "IP": d.id,
+                    "MAC":d.mac,
+                    "HOSTNAME":d.hostname,
+                    "GRFANA": "http://localhost:3000/d/rYdddlPWk" + parts[3] + "/iot" + parts[3] + "?orgId=1&from=now-15m&to=now&refresh=5s"
+                    }
         } 
-        else if (d.type === "Port") {
-            const parts = d.id.split(":")
-            data = {"Device": parts[0],
-                    "Port" : parts[1]};
+        else if (d.type === "unauthorized_device") {
+            data = {"STATUS": d.type,
+                "IP": d.id,
+                    "MAC":d.mac,
+                    "HOSTNAME":d.hostname
+                    }
         }
-        else if (d.type === "Router") {
-            data = {"Router": d.id }
+        else if (d.type === "port") {
+            const parts = d.id.split(":")
+            data = {"TYPE": d.type,
+                    "IP": parts[0],
+                    "PORT" : parts[1]};
+        }
+        else if (d.type === "router") {
+            data = {"TYPE": d.type,
+                    "IP": d.id, 
+                    "MAC":d.mac}
         } 
+        else if (d.type === "server") {
+            data = {"TYPE": d.type,
+                    "IP": d.id, 
+                    "MAC":d.mac,
+                    "HOSTNAME":d.hostname}
+        }
         return data
     } catch (error) {
         console.error(error);

@@ -1,0 +1,61 @@
+.showcase {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 20px 0 0 0;
+    height: 100%;
+    width: 70%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 5px solid #000000;
+}
+
+.text-container {
+    flex: 1; /* 텍스트 컨테이너가 유연하게 크기 조정 */
+    text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+.showcase img {
+    max-width: 30%; /* 이미지의 최대 너비를 조정하여 텍스트와 함께 표시 */
+    max-height: 30%;
+    object-fit: contain;
+    margin-left: 0%; /* 텍스트와 이미지 사이의 간격 조정 */
+}
+
+.showcase h1 {
+    margin-top: 0;
+    font-family: 'Jua', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 45px;
+    color: #fff; /* 텍스트 색상 변경 */
+}
+.showcase h2 {
+    margin-top: 0;
+    font-family: 'Jua', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    color: #fff; /* 텍스트 색상 변경 */
+}
+
+/* 부모 컨테이너 스타일 */
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -80px;
+}
+
+.outer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* 자식 요소들이 부모의 전체 너비를 차지하도록 설정 */
+}
+
+.showcase,
+.info {
+    flex-grow: 0; /* flex-container 내에서 공간을 균등하게 차지 */
+    margin: 6.5px; /* 좌우 여백 조정 */
+}

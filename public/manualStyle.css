@@ -1,0 +1,67 @@
+.manual {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0px;
+  border: 0px solid #000000;
+}
+
+.explanations {
+  padding: 10px; /* showcase 및 login-wrapper와 동일한 패딩을 적용 */
+  box-sizing: border-box; /* 패딩을 너비에 포함시킴 */
+  border: 0px solid #000000;
+  max-width: 100px; /* 이미지의 최대 너비를 조정하여 텍스트와 함께 표시 */
+  max-height: 10%;
+  margin: 0px; /* 요소들 사이에 간격 추가 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.protocols.container {
+  margin-top: -40px; /* 살짝 위로 올리기 */
+}
+
+.protocol {
+  display: flex;
+  justify-content: center; /* 중앙 정렬 */
+  align-items: center; /* 자식 요소들을 수직 중앙에 정렬 */
+  margin: 10px 0; /* 간격 조정 */
+}
+
+.protocol img {
+  max-width: 40px;
+  height: auto;
+  margin-right: 10px; /* 텍스트와 이미지 사이에 간격 추가 */
+}
+
+.protocol h1 {
+  font-family: "Jua", sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  color: #000000;
+  margin: 0; /* 여백 제거 */
+}
+
+.device img {
+  max-width: 60px;
+  height: auto;
+  
+}
+  
+.device {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin: -30px 0px; 
+}
+
+  .device h1 {
+    font-family: "Jua", sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    color: #000000;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
